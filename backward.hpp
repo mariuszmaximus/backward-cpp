@@ -92,6 +92,7 @@
 #include <vector>
 #include <exception>
 #include <iterator>
+#include <functional>
 
 #if defined(BACKWARD_SYSTEM_LINUX)
 
@@ -4306,7 +4307,7 @@ public:
     (void)info;
 #endif
   }
-
+  static inline std::function<void(std::string const &)> m_callback{nullptr};
 private:
   details::handle<char *> _stack_content;
   bool _loaded;
@@ -4380,7 +4381,7 @@ public:
 
     reporter_thread_.join();
   }
-
+  static inline std::function<void(std::string const &)> m_callback{nullptr};
 private:
   static CONTEXT *ctx() {
     static CONTEXT data;
@@ -4497,7 +4498,18 @@ private:
     st.skip_n_firsts(skip_frames);
 
     printer.address = true;
-    printer.print(st, std::cerr);
+    if(not m_callback)
+    {
+      printer.print(st, std::cerr);
+    }
+    else
+    {
+      // callback
+      printer.color_mode = ColorMode::type::always;
+      std::ostringstream _tmp;
+      printer.print(st, _tmp);
+      m_callback(_tmp.str());
+    }
   }
 };
 
